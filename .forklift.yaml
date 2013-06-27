@@ -1,0 +1,14 @@
+
+name: "haraway"
+
+collaborators:
+  - simon.menke@gmail.com
+
+config:
+  RACK_ENV:  production
+  RAILS_ENV: production
+
+addons:
+  - "pgbackups:plus"
+  - "redistogo:nano"
+  - "heroku-postgresql:dev"

@@ -57,6 +57,12 @@ func (cmd *Root) LoadConfig() error {
 	}
 
 	cmd.Config = config
+
+	err = cmd.add_owner_to_collaborators()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -145,4 +151,22 @@ func (cmd *Root) load_heroku_credentials() error {
 	}
 
 	return fmt.Errorf("Please run `heroku login`")
+}
+
+func (cmd *Root) add_owner_to_collaborators() error {
+	var (
+		resp struct {
+			Owner struct {
+				Email string `json:"email"`
+			} `json:"owner"`
+		}
+	)
+
+	err := cmd.Http("GET", nil, &resp, "/apps/%s", cmd.Config.Name)
+	if err != nil {
+		return err
+	}
+
+	cmd.Config.Collaborators = append(cmd.Config.Collaborators, resp.Owner.Email)
+	return nil
 }

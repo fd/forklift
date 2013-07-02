@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"bitbucket.org/mrhenry/forklift/deploypack/runner"
+	"github.com/fd/forklift/deploypack/runner"
 )
 
 type Handler interface {

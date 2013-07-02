@@ -10,8 +10,8 @@ import (
 	"code.google.com/p/go-netrc/netrc"
 	toml "github.com/pelletier/go-toml"
 
-	"bitbucket.org/mrhenry/forklift/deploypack/helpers"
-	"bitbucket.org/mrhenry/forklift/deploypack/runner"
+	"github.com/fd/forklift/deploypack/helpers"
+	"github.com/fd/forklift/deploypack/runner"
 )
 
 type Config struct {

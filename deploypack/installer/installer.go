@@ -7,7 +7,7 @@ import (
 	"path"
 	"time"
 
-	"bitbucket.org/mrhenry/forklift/deploypack/helpers"
+	"github.com/fd/forklift/deploypack/helpers"
 )
 
 func Run(ref string) error {

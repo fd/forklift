@@ -5,8 +5,8 @@ import (
 )
 
 import (
-	_ "bitbucket.org/mrhenry/forklift/deploy"
-	_ "bitbucket.org/mrhenry/forklift/root"
+	_ "github.com/fd/forklift/deploy"
+	_ "github.com/fd/forklift/root"
 )
 
 func main() { cli.Main(nil, nil) }

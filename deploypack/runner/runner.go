@@ -10,8 +10,8 @@ import (
 	"path"
 	"runtime"
 
-	"bitbucket.org/mrhenry/forklift/deploypack/helpers"
-	"bitbucket.org/mrhenry/forklift/deploypack/installer"
+	"github.com/fd/forklift/deploypack/helpers"
+	"github.com/fd/forklift/deploypack/installer"
 )
 
 func Run(ref string, in, out interface{}) error {

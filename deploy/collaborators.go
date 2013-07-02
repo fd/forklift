@@ -3,7 +3,7 @@ package deploy
 import (
 	"fmt"
 
-	"bitbucket.org/mrhenry/forklift/util/syncset"
+	"github.com/fd/forklift/util/syncset"
 )
 
 type (

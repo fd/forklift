@@ -3,7 +3,7 @@ package deploy
 import (
 	"fmt"
 
-	"bitbucket.org/mrhenry/forklift/root"
+	"github.com/fd/forklift/root"
 	"github.com/fd/go-cli/cli"
 )
 

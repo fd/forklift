@@ -15,8 +15,9 @@ type Root struct {
 	Account string `flag:"--account" env:"HEROKU_EMAIL"`
 	ApiKey  string `env:"HEROKU_API_KEY"`
 
-	DryRun bool   `flag:"--dry"`
-	Target string `flag:"-t" env:"TARGET"`
+	DryRun            bool   `flag:"--dry"`
+	UpdateDeploypacks bool   `flag:"--update-deploypacks"`
+	Target            string `flag:"-t" env:"TARGET"`
 
 	cli.Manual `
     Usage:   forklift <cmd> <options>
@@ -30,6 +31,9 @@ type Root struct {
 
     .DryRun:
       Don't actually change anything.
+
+    .UpdateDeploypacks:
+      Update the deploypacks before using them.
 
     .Target:
       The name of the environment.

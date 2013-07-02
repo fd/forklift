@@ -22,8 +22,10 @@ func Run(ref string) error {
 	}
 
 	// already up to date
-	if last_modified.After(time.Now().AddDate(0, 0, -7)) {
-		return nil
+	if os.Getenv("FORKLIFT_UPDATE_DEPLOYPACKS") != "true" {
+		if last_modified.After(time.Now().AddDate(0, 0, -7)) {
+			return nil
+		}
 	}
 
 	if last_modified.IsZero() {

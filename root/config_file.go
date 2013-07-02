@@ -27,6 +27,10 @@ func (cmd *Root) LoadConfig() error {
 		return nil
 	}
 
+	if cmd.UpdateDeploypacks {
+		os.Setenv("FORKLIFT_UPDATE_DEPLOYPACKS", "true")
+	}
+
 	err := cmd.load_heroku_credentials()
 	if err != nil {
 		return err

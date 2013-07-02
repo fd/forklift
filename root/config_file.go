@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path"
 
+	"code.google.com/p/go-netrc/netrc"
 	toml "github.com/pelletier/go-toml"
 
 	"bitbucket.org/mrhenry/forklift/deploypack/helpers"
@@ -23,6 +25,11 @@ type Config struct {
 func (cmd *Root) LoadConfig() error {
 	if cmd.Config != nil {
 		return nil
+	}
+
+	err := cmd.load_heroku_credentials()
+	if err != nil {
+		return err
 	}
 
 	filename, err := cmd.lookup_config_filename()
@@ -106,4 +113,32 @@ func load_config(filename string) (*Config, error) {
 	}
 
 	return config, nil
+}
+
+func (cmd *Root) load_heroku_credentials() error {
+	if cmd.ApiKey != "" && cmd.Account != "" {
+		return nil
+	}
+
+	u, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	home := u.HomeDir
+
+	machines, _, err := netrc.ParseFile(path.Join(home, ".netrc"))
+	if err != nil {
+		return err
+	}
+
+	for _, machine := range machines {
+		if machine.Name == "api.heroku.com" {
+			cmd.Account = machine.Login
+			cmd.ApiKey = machine.Password
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Please run `heroku login`")
 }

@@ -16,6 +16,18 @@ type (
 	}
 )
 
+var ignored_keys = map[string]bool{
+	"DATABASE_URL":        true,
+	"GEM_PATH":            true,
+	"HEROKU_POSTGRESQL_*": true,
+	"LANG":                true,
+	"MEMCACHIER_*":        true,
+	"PATH":                true,
+	"PGBACKUPS_URL":       true,
+	"REDISCLOUD_URL":      true,
+	"REDISTOGO_URL":       true,
+}
+
 func (cmd *Deploy) sync_config() error {
 	set := &config_set{
 		ctx:       cmd,
@@ -46,32 +58,15 @@ func (set *config_set) LoadCurrentKeys() error {
 	for key := range data {
 		ignore := false
 
-		if strings.HasPrefix(key, "HEROKU_POSTGRESQL_") {
-			ignore = true
-		}
-
-		if key == "DATABASE_URL" {
-			ignore = true
-		}
-
-		if key == "GEM_PATH" {
-			ignore = true
-		}
-
-		if key == "LANG" {
-			ignore = true
-		}
-
-		if key == "PATH" {
-			ignore = true
-		}
-
-		if key == "PGBACKUPS_URL" {
-			ignore = true
-		}
-
-		if key == "REDISTOGO_URL" {
-			ignore = true
+		for pattern := range ignored_keys {
+			if strings.HasSuffix(pattern, "*") {
+				ignore = strings.HasPrefix(key, strings.TrimSuffix(pattern, "*"))
+			} else {
+				ignore = pattern == key
+			}
+			if ignore {
+				break
+			}
 		}
 
 		if ignore {

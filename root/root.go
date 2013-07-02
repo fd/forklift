@@ -15,6 +15,7 @@ type Root struct {
 	Account string `flag:"--account" env:"HEROKU_EMAIL"`
 	ApiKey  string `env:"HEROKU_API_KEY"`
 
+	DryRun bool   `flag:"--dry"`
 	Target string `flag:"-t" env:"TARGET"`
 
 	cli.Manual `
@@ -26,6 +27,9 @@ type Root struct {
 
     .ApiKey:
       The API key for the current heroku account.
+
+    .DryRun:
+      Don't actually change anything.
 
     .Target:
       The name of the environment.

@@ -1,14 +1,14 @@
-package setup
+package deploy
 
 import (
 	"fmt"
 
-	"github.com/fd/forklift/root"
+	"bitbucket.org/mrhenry/forklift/root"
 	"github.com/fd/go-cli/cli"
 )
 
 func init() {
-	cli.Register(Setup{})
+	cli.Register(Deploy{})
 }
 
 // - update collaborators
@@ -16,17 +16,17 @@ func init() {
 // - update syslog drains
 // - update addons
 // - update config
-type Setup struct {
+type Deploy struct {
 	root.Root
-	cli.Arg0 `name:"setup"`
+	cli.Arg0 `name:"deploy"`
 
 	cli.Manual `
-    Usage:   forklift setup <options>
+    Usage:   forklift deploy <options>
     Summary: Update application configurations
   `
 }
 
-func (cmd *Setup) Main() error {
+func (cmd *Deploy) Main() error {
 	cmd.Pause()
 	defer cmd.Unpause()
 

@@ -1,28 +1,28 @@
-package setup
+package deploy
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/fd/forklift/util/syncset"
+	"bitbucket.org/mrhenry/forklift/util/syncset"
 )
 
 type (
 	config_set struct {
-		ctx *Setup
+		ctx *Deploy
 
 		requested map[string]string
 		current   map[string]string
 	}
 )
 
-func (cmd *Setup) sync_config() error {
+func (cmd *Deploy) sync_config() error {
 	set := &config_set{
 		ctx:       cmd,
-		requested: cmd.Config.Config,
+		requested: cmd.Config.Environment,
 	}
 
-	fmt.Printf("Config:\n")
+	fmt.Printf("Environment:\n")
 
 	err := set.LoadCurrentKeys()
 	if err != nil {

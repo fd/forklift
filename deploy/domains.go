@@ -1,9 +1,9 @@
-package setup
+package deploy
 
 import (
 	"fmt"
 
-	"github.com/fd/forklift/util/syncset"
+	"bitbucket.org/mrhenry/forklift/util/syncset"
 )
 
 type (
@@ -13,7 +13,7 @@ type (
 	}
 
 	domain_set struct {
-		ctx *Setup
+		ctx *Deploy
 
 		requested []string
 		current   []string
@@ -21,7 +21,7 @@ type (
 	}
 )
 
-func (cmd *Setup) sync_domains() error {
+func (cmd *Deploy) sync_domains() error {
 	set := &domain_set{
 		ctx:       cmd,
 		requested: cmd.Config.Domains,

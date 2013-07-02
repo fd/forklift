@@ -9,6 +9,10 @@ import (
 )
 
 func (cmd *Root) Http(method string, in, out interface{}, path string, args ...interface{}) error {
+	if cmd.DryRun && method != "GET" {
+		return nil
+	}
+
 	var (
 		body_in  io.Reader
 		body_out bytes.Buffer

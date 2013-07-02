@@ -52,7 +52,9 @@ func (cmd *Root) BreakFormation() error {
 
 	cmd.Formation = data
 
-	time.Sleep(12 * time.Second)
+	if !cmd.DryRun {
+		time.Sleep(12 * time.Second)
+	}
 
 	return nil
 }
@@ -80,7 +82,9 @@ func (cmd *Root) RestoreFormation() error {
 
 	tabw.Flush()
 
-	time.Sleep(12 * time.Second)
+	if !cmd.DryRun {
+		time.Sleep(12 * time.Second)
+	}
 
 	return nil
 }

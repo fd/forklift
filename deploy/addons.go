@@ -1,10 +1,10 @@
-package setup
+package deploy
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/fd/forklift/util/syncset"
+	"bitbucket.org/mrhenry/forklift/util/syncset"
 )
 
 type (
@@ -20,14 +20,14 @@ type (
 	}
 
 	addon_set struct {
-		ctx *Setup
+		ctx *Deploy
 
 		requested map[string]*addon_t
 		current   map[string]*addon_t
 	}
 )
 
-func (cmd *Setup) sync_addons() error {
+func (cmd *Deploy) sync_addons() error {
 	set := &addon_set{
 		ctx:       cmd,
 		requested: make(map[string]*addon_t, len(cmd.Config.Addons)),

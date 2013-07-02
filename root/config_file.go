@@ -2,15 +2,19 @@ package root
 
 import (
 	"io/ioutil"
-	"launchpad.net/goyaml"
+
+	toml "github.com/pelletier/go-toml"
+
+	"bitbucket.org/mrhenry/forklift/deploypack/helpers"
+	"bitbucket.org/mrhenry/forklift/deploypack/runner"
 )
 
 type Config struct {
-	Name          string            `yaml:"name"`
-	Addons        []string          `yaml:"addons,flow,omitempty"`
-	Collaborators []string          `yaml:"collaborators,flow,omitempty"`
-	Domains       []string          `yaml:"domains,flow,omitempty"`
-	Config        map[string]string `yaml:"config,flow,omitempty"`
+	Name          string
+	Addons        []string
+	Collaborators []string
+	Domains       []string
+	Environment   map[string]string
 }
 
 func (cmd *Root) LoadConfig() error {
@@ -18,7 +22,7 @@ func (cmd *Root) LoadConfig() error {
 		return nil
 	}
 
-	config, err := load_config("./.forklift.yaml")
+	config, err := load_config("./.forklift.toml")
 	if err != nil {
 		return err
 	}
@@ -29,15 +33,33 @@ func (cmd *Root) LoadConfig() error {
 
 func load_config(path string) (*Config, error) {
 	var (
-		config *Config
+		data       []byte
+		tree       *toml.TomlTree
+		config_map map[string]interface{}
+		config     *Config
+		deploypack string
+		err        error
 	)
 
-	data, err := ioutil.ReadFile(path)
+	data, err = ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	err = goyaml.Unmarshal(data, &config)
+	{
+		tree, err = toml.Load(string(data))
+		if err != nil {
+			return nil, err
+		}
+
+		config_map = map[string]interface{}(*tree)
+		deploypack, err = helpers.ExtractDeploypack(config_map)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = runner.Run(deploypack, config_map, &config)
 	if err != nil {
 		return nil, err
 	}

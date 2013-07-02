@@ -47,7 +47,7 @@ func Sync(set Set) bool {
 		}
 	}
 
-	for key, _ := range key_state {
+	for key := range key_state {
 		keys = append(keys, key)
 	}
 

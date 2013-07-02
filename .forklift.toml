@@ -1,0 +1,17 @@
+
+name = "haraway"
+deploypack = "git://github.com/fd/forklift-deploypack-go-example.git"
+
+collaborators = [
+  "simon.menke@gmail.com"
+]
+
+addons = [
+  "pgbackups:plus",
+  "redistogo:nano",
+  "heroku-postgresql:dev",
+]
+
+[environment]
+RACK_ENV  = "production"
+RAILS_ENV = "production"

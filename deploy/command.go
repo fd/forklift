@@ -51,13 +51,13 @@ func (cmd *Deploy) Main() error {
 	}
 	fmt.Println("")
 
-	err = cmd.sync_config()
+	err = cmd.sync_addons()
 	if err != nil {
 		return err
 	}
 	fmt.Println("")
 
-	err = cmd.sync_addons()
+	err = cmd.sync_config()
 	if err != nil {
 		return err
 	}

@@ -12,9 +12,8 @@ type Root struct {
 	cli.Root
 	cli.Arg0
 
-	Account string `flag:"--account" env:"HEROKU_EMAIL"`
-	ApiKey  string `env:"HEROKU_API_KEY"`
-
+	Account           string `env:"HEROKU_EMAIL"`
+	ApiKey            string `env:"HEROKU_API_KEY"`
 	DryRun            bool   `flag:"--dry"`
 	UpdateDeploypacks bool   `flag:"--update-deploypacks"`
 	Target            string `flag:"-t" env:"TARGET"`

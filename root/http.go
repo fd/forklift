@@ -8,9 +8,23 @@ import (
 	"net/http"
 )
 
+func (cmd *Root) OwnerHttp(method string, in, out interface{}, path string, args ...interface{}) error {
+	owner := cmd.lookup_owner()
+	return cmd.do_http(owner, method, in, out, path, args...)
+}
+
 func (cmd *Root) Http(method string, in, out interface{}, path string, args ...interface{}) error {
+	return cmd.do_http(cmd.Account, method, in, out, path, args...)
+}
+
+func (cmd *Root) do_http(account, method string, in, out interface{}, path string, args ...interface{}) error {
 	if cmd.DryRun && method != "GET" {
 		return nil
+	}
+
+	api_key, err := cmd.lookup_api_key(account)
+	if err != nil {
+		return err
 	}
 
 	var (
@@ -37,7 +51,7 @@ func (cmd *Root) Http(method string, in, out interface{}, path string, args ...i
 		return err
 	}
 
-	req.SetBasicAuth(cmd.Account, cmd.ApiKey)
+	req.SetBasicAuth(account, api_key)
 	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
 	req.Header.Set("User-Agent", "forklift; version=0")
 
@@ -69,6 +83,30 @@ func (cmd *Root) Http(method string, in, out interface{}, path string, args ...i
 	}
 
 	return err
+}
+
+func (cmd *Root) lookup_owner() string {
+	if cmd.Config != nil && cmd.Config.Owner != "" {
+		return cmd.Config.Owner
+	}
+
+	return cmd.Account
+}
+
+func (cmd *Root) lookup_api_key(email string) (string, error) {
+	if email == cmd.Account {
+		return cmd.ApiKey, nil
+	}
+
+	if cmd.Config != nil {
+		for _, owner := range cmd.Config.Owners {
+			if owner.Email == email {
+				return owner.ApiKey, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("api: unknown heroku account %s", email)
 }
 
 type api_error struct {

@@ -43,7 +43,7 @@ func deploypack_install(ref, dir string) error {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", ref, dir)
+	cmd := exec.Command("git", "clone", "--depth", "1", ref, dir)
 	cmd.Stderr = nil
 	cmd.Stdout = nil
 	cmd.Stdin = nil

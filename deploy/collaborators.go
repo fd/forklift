@@ -47,7 +47,7 @@ func (set *collaborator_set) LoadCurrentKeys() error {
 		data []*collaborator_t
 	)
 
-	err := set.ctx.Http("GET", nil, &data, "/apps/%s/collaborators", set.ctx.Config.Name)
+	err := set.ctx.OwnerHttp("GET", nil, &data, "/apps/%s/collaborators", set.ctx.Config.Name)
 	if err != nil {
 		return err
 	}
@@ -84,11 +84,11 @@ func (set *collaborator_set) Add(email string) error {
 		},
 	}
 
-	return set.ctx.Http("POST", &collaborator, nil, "/apps/%s/collaborators", set.ctx.Config.Name)
+	return set.ctx.OwnerHttp("POST", &collaborator, nil, "/apps/%s/collaborators", set.ctx.Config.Name)
 }
 
 func (set *collaborator_set) Remove(email string) error {
 	collaborator := set.collaborators[email]
 
-	return set.ctx.Http("DELETE", nil, nil, "/apps/%s/collaborators/%s", set.ctx.Config.Name, collaborator.Id)
+	return set.ctx.OwnerHttp("DELETE", nil, nil, "/apps/%s/collaborators/%s", set.ctx.Config.Name, collaborator.Id)
 }

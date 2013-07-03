@@ -16,10 +16,17 @@ import (
 
 type Config struct {
 	Name          string
+	Owner         string
 	Addons        []string
 	Collaborators []string
 	Domains       []string
 	Environment   map[string]string
+	Owners        []Owner
+}
+
+type Owner struct {
+	Email  string
+	ApiKey string
 }
 
 func (cmd *Root) LoadConfig() error {
@@ -165,6 +172,10 @@ func (cmd *Root) add_owner_to_collaborators() error {
 	err := cmd.Http("GET", nil, &resp, "/apps/%s", cmd.Config.Name)
 	if err != nil {
 		return err
+	}
+
+	if cmd.Config.Owner == "" {
+		cmd.Config.Owner = resp.Owner.Email
 	}
 
 	cmd.Config.Collaborators = append(cmd.Config.Collaborators, resp.Owner.Email)

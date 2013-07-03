@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -12,6 +14,7 @@ import (
 func (c *Deploy) push_repository() error {
 	var (
 		cmd *exec.Cmd
+		src string
 		err error
 	)
 
@@ -25,11 +28,37 @@ func (c *Deploy) push_repository() error {
 	}
 	fmt.Println("")
 
-	fmt.Printf("Pushing master:\n")
+	if c.Config.Upstream != "" {
+		cmd = exec.Command("git", "tag", "-l", "deploy-"+c.Config.Upstream+"-*")
+		data, err := cmd.Output()
+		if err != nil {
+			return err
+		}
+
+		tags := strings.Split(strings.TrimSpace(string(data)), "\n")
+		sort.Strings(tags)
+		if len(tags) == 0 {
+			return fmt.Errorf("No upstream deploy found for target %s", c.Config.Upstream)
+		}
+		tag := tags[len(tags)-1]
+		if tag == "" {
+			return fmt.Errorf("No upstream deploy found for target %s", c.Config.Upstream)
+		}
+		src = tag
+	}
+
+	if src == "" {
+		fmt.Printf("Pushing %s:\n", c.Target)
+	} else {
+		fmt.Printf("Pushing %s => %s:\n", src, c.Target)
+	}
 	if c.DryRun {
 		fmt.Printf(" - skipped (dry run)\n")
 	} else {
-		cmd = exec.Command("git", "push", "git@heroku.com:"+c.Config.Name+".git", "origin/master:master", "--force")
+		if src == "" {
+			src = "origin/master"
+		}
+		cmd = exec.Command("git", "push", "git@heroku.com:"+c.Config.Name+".git", src+":master", "--force")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = nil

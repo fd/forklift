@@ -17,6 +17,7 @@ import (
 type Config struct {
 	Name          string
 	Owner         string
+	Upstream      string
 	Addons        []string
 	Collaborators []string
 	Domains       []string

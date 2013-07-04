@@ -10,4 +10,11 @@ import (
 	_ "github.com/fd/forklift/update"
 )
 
-func main() { cli.Main(nil, nil) }
+func main() {
+	if !in_dev_mode() {
+		user_exec()
+		auto_update()
+	}
+
+	cli.Main(nil, nil)
+}

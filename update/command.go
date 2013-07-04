@@ -77,6 +77,10 @@ func (cmd *Update) Main() error {
 }
 
 func find_bin(arg0 string) (string, error) {
+	if filepath.IsAbs(arg0) {
+		return arg0, nil
+	}
+
 	path, err := filepath.Abs(arg0)
 	if err == nil {
 		if _, err := os.Stat(path); err == nil {

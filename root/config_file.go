@@ -15,14 +15,15 @@ import (
 )
 
 type Config struct {
-	Name          string
-	Owner         string
-	Upstream      string
-	Addons        []string
-	Collaborators []string
-	Domains       []string
-	Environment   map[string]string
-	Owners        []Owner
+	Name             string
+	Owner            string
+	Upstream         string
+	Addons           []string
+	Collaborators    []string
+	Domains          []string
+	Environment      map[string]string
+	Owners           []Owner
+	PostPushCommands []string
 }
 
 type Owner struct {

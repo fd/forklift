@@ -69,6 +69,12 @@ func (cmd *Deploy) Main() error {
 	}
 	fmt.Println("")
 
+	err = cmd.run_post_push_commands()
+	if err != nil {
+		return err
+	}
+	fmt.Println("")
+
 	err = cmd.tag_repository()
 	if err != nil {
 		return err

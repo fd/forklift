@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -118,6 +119,8 @@ func auto_update_interval() time.Duration {
 	}
 
 	text := strings.TrimSpace(string(data))
+
+	fmt.Printf("cnf `%s`\n", text)
 
 	if text == "never" {
 		return -1

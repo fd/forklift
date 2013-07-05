@@ -1,4 +1,4 @@
-package deploy
+package apps
 
 import (
 	"fmt"
@@ -20,20 +20,20 @@ type (
 	}
 
 	addon_set struct {
-		ctx *Deploy
+		ctx *App
 
 		requested map[string]*addon_t
 		current   map[string]*addon_t
 	}
 )
 
-func (cmd *Deploy) sync_addons() error {
+func (app *App) sync_addons() error {
 	set := &addon_set{
-		ctx:       cmd,
-		requested: make(map[string]*addon_t, len(cmd.Config.Addons)),
+		ctx:       app,
+		requested: make(map[string]*addon_t, len(app.Addons)),
 	}
 
-	for _, name := range cmd.Config.Addons {
+	for _, name := range app.Addons {
 		parts := strings.SplitN(name, ":", 2)
 		addon := &addon_t{
 			name: parts[0],
@@ -58,7 +58,7 @@ func (set *addon_set) LoadCurrentKeys() error {
 		data []*addon_t
 	)
 
-	err := set.ctx.Http("GET", nil, &data, "/apps/%s/addons", set.ctx.Config.Name)
+	err := set.ctx.HttpV3("GET", nil, &data, "/apps/%s/addons", set.ctx.AppName)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (set *addon_set) Change(key string) (string, string, error) {
 		after  = set.requested[key].Plan.name
 		addon  = set.requested[key]
 		id     = set.current[key].Id
-		err    = set.ctx.Http("PATCH", addon, nil, "/apps/%s/addons/%s", set.ctx.Config.Name, id)
+		err    = set.ctx.HttpV3("PATCH", addon, nil, "/apps/%s/addons/%s", set.ctx.AppName, id)
 	)
 
 	return before, after, err
@@ -109,11 +109,11 @@ func (set *addon_set) Change(key string) (string, string, error) {
 func (set *addon_set) Add(name string) error {
 	addon := set.requested[name]
 
-	return set.ctx.Http("POST", &addon, nil, "/apps/%s/addons", set.ctx.Config.Name)
+	return set.ctx.HttpV3("POST", &addon, nil, "/apps/%s/addons", set.ctx.AppName)
 }
 
 func (set *addon_set) Remove(name string) error {
 	addon := set.current[name]
 
-	return set.ctx.Http("DELETE", nil, nil, "/apps/%s/addons/%s", set.ctx.Config.Name, addon.Id)
+	return set.ctx.HttpV3("DELETE", nil, nil, "/apps/%s/addons/%s", set.ctx.AppName, addon.Id)
 }

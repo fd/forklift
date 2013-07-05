@@ -49,7 +49,7 @@ func DecodeTOML(r io.Reader) (*Config, error) {
 		return nil, err
 	}
 
-	tree, err = toml.Load(data)
+	tree, err = toml.Load(string(data))
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +92,8 @@ func populate_cnf(v interface{}, cnf *Config) (err error) {
 		}
 	}
 
+	cnf.App.config = cnf
+	cnf.Env.config = cnf
 	cnf.Unused = root
 
 	return
@@ -130,7 +132,7 @@ func populate_app(root map[string]interface{}, app *App) {
 			delete(root, key)
 
 		case "environment", "Environment":
-			app.Environment = must_string_slice("environment", v)
+			app.Environment = must_string_map("environment", v)
 			delete(root, key)
 
 		default:
@@ -212,11 +214,11 @@ func must_string(key string, v interface{}) string {
 	if s, ok := v.(string); ok {
 		return s
 	}
-	panic(fmt.Sprintf("expected a string for `%s`", key))
+	panic(fmt.Sprintf("expected a string for `%s` (instead of %T)", key, v))
 }
 
 func must_string_slice(key string, v interface{}) []string {
-	if vl, ok := v.([]interface{}); !ok {
+	if vl, ok := v.([]interface{}); ok {
 		var (
 			sl   = make([]string, len(vl))
 			skey = key + "[]"
@@ -228,11 +230,11 @@ func must_string_slice(key string, v interface{}) []string {
 
 		return sl
 	}
-	panic(fmt.Sprintf("expected an array for `%s`", key))
+	panic(fmt.Sprintf("expected an array for `%s` (instead of %T)", key, v))
 }
 
 func must_string_map(key string, v interface{}) map[string]string {
-	if vl, ok := v.(map[string]interface{}); !ok {
+	if vl, ok := v.(map[string]interface{}); ok {
 		var (
 			sl   = make(map[string]string, len(vl))
 			skey = key + "[k]"
@@ -244,7 +246,7 @@ func must_string_map(key string, v interface{}) map[string]string {
 
 		return sl
 	}
-	panic(fmt.Sprintf("expected a map for `%s`", key))
+	panic(fmt.Sprintf("expected a map for `%s` (instead of %T)", key, v))
 }
 
 func must_account(key string, v interface{}) Account {
@@ -268,13 +270,13 @@ func must_account(key string, v interface{}) Account {
 
 		return account
 	}
-	panic(fmt.Sprintf("expected a map for `%s`", key))
+	panic(fmt.Sprintf("expected a map for `%s` (instead of %T)", key, v))
 }
 
-func must_account_slice(key string, v interface{}) []string {
-	if vl, ok := v.([]interface{}); !ok {
+func must_account_slice(key string, v interface{}) []Account {
+	if vl, ok := v.([]interface{}); ok {
 		var (
-			sl   = make([]string, len(vl))
+			sl   = make([]Account, len(vl))
 			skey = key + "[]"
 		)
 
@@ -284,5 +286,5 @@ func must_account_slice(key string, v interface{}) []string {
 
 		return sl
 	}
-	panic(fmt.Sprintf("expected an array for `%s`", key))
+	panic(fmt.Sprintf("expected an array for `%s` (instead of %T)", key, v))
 }

@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,94 +12,68 @@ import (
 	"github.com/fd/forklift/deploypack/installer"
 )
 
-func Run(ref string, in, out interface{}) error {
-	var (
-		data       []byte
-		config_map map[string]interface{}
-		err        error
-	)
-
-	data, err = json.Marshal(in)
+func Run(ref string, wd string, environ []string, in io.Reader, out io.Writer, update bool) error {
+	err := installer.Run(ref, update)
 	if err != nil {
 		return err
 	}
 
-	for ref != "" {
-		data, err = run(ref, in)
-		if err != nil {
-			return err
-		}
-
-		err = json.Unmarshal(data, &config_map)
-		if err != nil {
-			return err
-		}
-
-		ref, err = helpers.ExtractDeploypack(config_map)
-		if err != nil {
-			return err
-		}
-
-		in = config_map
-	}
-
-	return json.Unmarshal(data, out)
-}
-
-func run(ref string, in interface{}) ([]byte, error) {
-	err := installer.Run(ref)
-	if err != nil {
-		return nil, err
-	}
-
 	dir, err := helpers.Path(ref)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	bin, err := lookup_bin(ref, dir)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cmd := exec.Command(bin)
 
+	cmd.Dir = wd
+
+	cmd.Env = append(
+		os.Environ(),
+		environ...,
+	)
+
 	w, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, err
+		return err
 	}
+	defer w.Close()
 
 	r, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return err
 	}
+	defer r.Close()
 
 	cmd.Stderr = os.Stderr
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = json.NewEncoder(w).Encode(in)
+	_, err = io.Copy(w, in)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	w.Close()
 
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, r)
+	_, err = io.Copy(out, r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return buf.Bytes(), nil
+	return nil
 }
 
 func lookup_bin(ref, dir string) (string, error) {

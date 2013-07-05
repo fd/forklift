@@ -5,21 +5,42 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/fd/forklift/deploypack/runner"
 )
 
 type Config struct {
-	App        App
-	Env        Env
-	Deploypack string
-	Unused     map[string]interface{}
+	Target            string
+	RootDir           string
+	DryRun            bool
+	UpdateDeploypacks bool
+	App               App
+	Env               Env
+	Deploypack        string
+	Unused            map[string]interface{}
 }
 
-func Load(target string) (*Config, error) {
-
-	cnf, err := DecodeTOML(r)
+func Load(wd, target string, dryrun, update_buildpacks bool) (*Config, error) {
+	root_dir, filename, err := lookup_config_filename(wd, target)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	cnf, err := DecodeTOML(f)
+	if err != nil {
+		return nil, err
+	}
+
+	cnf.Target = target
+	cnf.RootDir = root_dir
+	cnf.DryRun = dryrun
+	cnf.UpdateDeploypacks = update_buildpacks
 
 	for cnf.Deploypack != "" {
 		var (
@@ -27,27 +48,62 @@ func Load(target string) (*Config, error) {
 			out bytes.Buffer
 		)
 
-		err := EncodeJSON(&in, cnf)
+		err = EncodeJSON(&in, cnf)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// run
+		environ := []string{
+			"FORKLIFT_DIR=" + cnf.RootDir,
+			"FORKLIFT_TARGET=" + cnf.Target,
+		}
+
+		if cnf.DryRun {
+			environ = append(
+				environ,
+				"FORKLIFT_DRYRUN=true",
+			)
+		}
+
+		if cnf.UpdateDeploypacks {
+			environ = append(
+				environ,
+				"FORKLIFT_UPDATE_DEPLOYPACKS=true",
+			)
+		}
+
+		err = runner.Run(
+			cnf.Deploypack,
+			cnf.RootDir,
+			environ,
+			&in,
+			&out,
+			cnf.UpdateDeploypacks,
+		)
+		if err != nil {
+			return nil, err
+		}
 
 		cnf, err = DecodeJSON(&out)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
+		cnf.Target = target
+		cnf.RootDir = root_dir
+		cnf.DryRun = dryrun
+		cnf.UpdateDeploypacks = update_buildpacks
 	}
 
+	err = cnf.Env.load_heroku_credentials()
+	if err != nil {
+		return nil, err
+	}
+
+	return cnf, nil
 }
 
-func lookup_config_filename(target string) (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("Unable to find configuration file for %s (%s)", target, err)
-	}
-
+func lookup_config_filename(wd, target string) (string, string, error) {
 	dir := wd
 	subpath := path.Join(".forklift", target+".toml")
 
@@ -56,11 +112,11 @@ func lookup_config_filename(target string) (string, error) {
 
 		fi, err := os.Stat(filename)
 		if err == nil && fi.Mode().IsRegular() {
-			return filename, nil
+			return dir, filename, nil
 		}
 
 		dir = path.Dir(dir)
 	}
 
-	return "", fmt.Errorf("Unable to find configuration file for %s in %s", target, wd)
+	return "", "", fmt.Errorf("Unable to find configuration file for %s in %s", target, wd)
 }

@@ -1,4 +1,4 @@
-package deploy
+package apps
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type (
 	}
 
 	domain_set struct {
-		ctx *Deploy
+		ctx *App
 
 		requested []string
 		current   []string
@@ -21,10 +21,10 @@ type (
 	}
 )
 
-func (cmd *Deploy) sync_domains() error {
+func (app *App) sync_domains() error {
 	set := &domain_set{
-		ctx:       cmd,
-		requested: cmd.Config.Domains,
+		ctx:       app,
+		requested: app.Domains,
 	}
 
 	fmt.Printf("Domain:\n")
@@ -41,10 +41,10 @@ func (cmd *Deploy) sync_domains() error {
 func (set *domain_set) LoadCurrentKeys() error {
 	var (
 		data     []*domain_t
-		mainhost = set.ctx.Config.Name + ".herokuapp.com"
+		mainhost = set.ctx.AppName + ".herokuapp.com"
 	)
 
-	err := set.ctx.Http("GET", nil, &data, "/apps/%s/domains", set.ctx.Config.Name)
+	err := set.ctx.HttpV3("GET", nil, &data, "/apps/%s/domains", set.ctx.AppName)
 	if err != nil {
 		return err
 	}
@@ -84,11 +84,11 @@ func (set *domain_set) Add(host string) error {
 		Hostname: host,
 	}
 
-	return set.ctx.Http("POST", &domain, nil, "/apps/%s/domains", set.ctx.Config.Name)
+	return set.ctx.HttpV3("POST", &domain, nil, "/apps/%s/domains", set.ctx.AppName)
 }
 
 func (set *domain_set) Remove(host string) error {
 	domain := set.domains[host]
 
-	return set.ctx.Http("DELETE", nil, nil, "/apps/%s/domains/%s", set.ctx.Config.Name, domain.Id)
+	return set.ctx.HttpV3("DELETE", nil, nil, "/apps/%s/domains/%s", set.ctx.AppName, domain.Id)
 }

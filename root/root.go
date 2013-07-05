@@ -37,7 +37,4 @@ type Root struct {
     .Target:
       The name of the environment.
   `
-
-	Config    *Config
-	Formation []Formation
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/fd/forklift/deploypack/helpers"
 )
 
-func Run(ref string) error {
+func Run(ref string, update bool) error {
 	dir, err := helpers.Path(ref)
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func Run(ref string) error {
 	}
 
 	// already up to date
-	if os.Getenv("FORKLIFT_UPDATE_DEPLOYPACKS") != "true" {
+	if update == false && os.Getenv("FORKLIFT_UPDATE_DEPLOYPACKS") != "true" {
 		if last_modified.After(time.Now().AddDate(0, 0, -7)) {
 			return nil
 		}

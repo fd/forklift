@@ -1,20 +1,15 @@
-package root
+package apps
 
 import (
 	"fmt"
 )
 
-func (cmd *Root) SetMaintenance(flag bool) error {
-	err := cmd.LoadConfig()
-	if err != nil {
-		return err
-	}
-
+func (app *App) SetMaintenance(flag bool) error {
 	data := struct {
 		Maintenance bool `json:"maintenance"`
 	}{flag}
 
-	err = cmd.Http("PATCH", data, nil, "/apps/%s", cmd.Config.Name)
+	err := app.HttpV3("PATCH", data, nil, "/apps/%s", app.AppName)
 	if err != nil {
 		if flag {
 			fmt.Printf("Maintenance: still off (error: %s)\n", err)

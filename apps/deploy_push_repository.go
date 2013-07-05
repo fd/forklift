@@ -1,4 +1,4 @@
-package deploy
+package apps
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 // - git remote update origin
 // - git push {heroku remote} {tip}:master --force
-func (c *Deploy) push_repository() error {
+func (app *App) push_repository() error {
 	var (
 		cmd *exec.Cmd
 		src string
@@ -28,8 +28,8 @@ func (c *Deploy) push_repository() error {
 	}
 	fmt.Println("")
 
-	if c.Config.Upstream != "" {
-		cmd = exec.Command("git", "tag", "-l", "deploy-"+c.Config.Upstream+"-*")
+	if app.Upstream != "" {
+		cmd = exec.Command("git", "tag", "-l", "deploy-"+app.Upstream+"-*")
 		data, err := cmd.Output()
 		if err != nil {
 			return err
@@ -38,27 +38,27 @@ func (c *Deploy) push_repository() error {
 		tags := strings.Split(strings.TrimSpace(string(data)), "\n")
 		sort.Strings(tags)
 		if len(tags) == 0 {
-			return fmt.Errorf("No upstream deploy found for target %s", c.Config.Upstream)
+			return fmt.Errorf("No upstream deploy found for target %s", app.Upstream)
 		}
 		tag := tags[len(tags)-1]
 		if tag == "" {
-			return fmt.Errorf("No upstream deploy found for target %s", c.Config.Upstream)
+			return fmt.Errorf("No upstream deploy found for target %s", app.Upstream)
 		}
 		src = tag
 	}
 
 	if src == "" {
-		fmt.Printf("Pushing %s:\n", c.Target)
+		fmt.Printf("Pushing %s:\n", app.config.Target)
 	} else {
-		fmt.Printf("Pushing %s => %s:\n", src, c.Target)
+		fmt.Printf("Pushing %s => %s:\n", src, app.config.Target)
 	}
-	if c.DryRun {
+	if app.config.DryRun {
 		fmt.Printf(" - skipped (dry run)\n")
 	} else {
 		if src == "" {
 			src = "origin/master"
 		}
-		cmd = exec.Command("git", "push", "git@heroku.com:"+c.Config.Name+".git", src+":master", "--force")
+		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", src+":master", "--force")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = nil
@@ -73,7 +73,7 @@ func (c *Deploy) push_repository() error {
 
 // - git tag -a "deploy-{target}-{timestamp}" -F - {tip}
 // - git push origin "deploy-{target}-{timestamp}"
-func (c *Deploy) tag_repository() error {
+func (app *App) tag_repository() error {
 	var (
 		now time.Time
 		tag string
@@ -83,11 +83,11 @@ func (c *Deploy) tag_repository() error {
 	)
 
 	now = time.Now().UTC()
-	tag = fmt.Sprintf("deploy-%s-%s", c.Target, now.Format("20060102150405"))
-	msg = fmt.Sprintf("Deploy to %s at %s by %s", c.Target, now.Format(time.RFC3339), c.Account)
+	tag = fmt.Sprintf("deploy-%s-%s", app.config.Target, now.Format("20060102150405"))
+	msg = fmt.Sprintf("Deploy to %s at %s by %s", app.config.Target, now.Format(time.RFC3339), app.config.Env.CurrentUser.Email)
 
 	fmt.Printf("Tagging commit as %s\n", tag)
-	if c.DryRun {
+	if app.config.DryRun {
 		fmt.Printf(" - skipped (dry run)\n")
 	} else {
 		cmd = exec.Command("git", "tag", "-a", tag, "-m", msg, "origin/master")
@@ -103,7 +103,7 @@ func (c *Deploy) tag_repository() error {
 	fmt.Println("")
 
 	fmt.Printf("Pushing tag to origin:\n")
-	if c.DryRun {
+	if app.config.DryRun {
 		fmt.Printf(" - skipped (dry run)\n")
 	} else {
 		cmd = exec.Command("git", "push", "origin", tag)

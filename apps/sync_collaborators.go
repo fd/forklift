@@ -1,4 +1,4 @@
-package deploy
+package apps
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ type (
 	}
 
 	collaborator_set struct {
-		ctx *Deploy
+		ctx *App
 
 		requested     []string
 		current       []string
@@ -25,15 +25,20 @@ type (
 	}
 )
 
-func (cmd *Deploy) sync_collaborators() error {
-	set := &collaborator_set{
-		ctx:       cmd,
-		requested: cmd.Config.Collaborators,
-	}
-
+func (app *App) sync_collaborators() error {
 	fmt.Printf("Collaborators:\n")
 
-	err := set.LoadCurrentKeys()
+	err := app.add_owner_to_collaborators()
+	if err != nil {
+		return err
+	}
+
+	set := &collaborator_set{
+		ctx:       app,
+		requested: app.Collaborators,
+	}
+
+	err = set.LoadCurrentKeys()
 	if err != nil {
 		return err
 	}
@@ -42,12 +47,34 @@ func (cmd *Deploy) sync_collaborators() error {
 	return nil
 }
 
+func (app *App) add_owner_to_collaborators() error {
+	var (
+		resp struct {
+			Owner struct {
+				Email string `json:"email"`
+			} `json:"owner"`
+		}
+	)
+
+	err := app.OwnerHttpV3("GET", nil, &resp, "/apps/%s", app.AppName)
+	if err != nil {
+		return err
+	}
+
+	if app.Owner == "" {
+		app.Owner = resp.Owner.Email
+	}
+
+	app.Collaborators = append(app.Collaborators, resp.Owner.Email)
+	return nil
+}
+
 func (set *collaborator_set) LoadCurrentKeys() error {
 	var (
 		data []*collaborator_t
 	)
 
-	err := set.ctx.OwnerHttp("GET", nil, &data, "/apps/%s/collaborators", set.ctx.Config.Name)
+	err := set.ctx.OwnerHttpV3("GET", nil, &data, "/apps/%s/collaborators", set.ctx.AppName)
 	if err != nil {
 		return err
 	}
@@ -84,11 +111,11 @@ func (set *collaborator_set) Add(email string) error {
 		},
 	}
 
-	return set.ctx.OwnerHttp("POST", &collaborator, nil, "/apps/%s/collaborators", set.ctx.Config.Name)
+	return set.ctx.OwnerHttpV3("POST", &collaborator, nil, "/apps/%s/collaborators", set.ctx.AppName)
 }
 
 func (set *collaborator_set) Remove(email string) error {
 	collaborator := set.collaborators[email]
 
-	return set.ctx.OwnerHttp("DELETE", nil, nil, "/apps/%s/collaborators/%s", set.ctx.Config.Name, collaborator.Id)
+	return set.ctx.OwnerHttpV3("DELETE", nil, nil, "/apps/%s/collaborators/%s", set.ctx.AppName, collaborator.Id)
 }

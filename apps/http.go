@@ -1,4 +1,4 @@
-package root
+package apps
 
 import (
 	"bytes"
@@ -8,21 +8,22 @@ import (
 	"net/http"
 )
 
-func (cmd *Root) OwnerHttp(method string, in, out interface{}, path string, args ...interface{}) error {
-	owner := cmd.lookup_owner()
-	return cmd.do_http(owner, method, in, out, path, args...)
+func (app *App) HttpV3(method string, in, out interface{}, path string, args ...interface{}) error {
+	account := app.config.Env.CurrentUser.Email
+	return app.config.Env.HttpV3(account, method, in, out, path, args...)
 }
 
-func (cmd *Root) Http(method string, in, out interface{}, path string, args ...interface{}) error {
-	return cmd.do_http(cmd.Account, method, in, out, path, args...)
+func (app *App) OwnerHttpV3(method string, in, out interface{}, path string, args ...interface{}) error {
+	account := app.lookup_owner()
+	return app.config.Env.HttpV3(account, method, in, out, path, args...)
 }
 
-func (cmd *Root) do_http(account, method string, in, out interface{}, path string, args ...interface{}) error {
-	if cmd.DryRun && method != "GET" {
+func (env *Env) HttpV3(account, method string, in, out interface{}, path string, args ...interface{}) error {
+	if env.config.DryRun && (method != "GET" && method != "HEAD") {
 		return nil
 	}
 
-	api_key, err := cmd.lookup_api_key(account)
+	api_key, err := env.lookup_api_key(account)
 	if err != nil {
 		return err
 	}
@@ -85,24 +86,22 @@ func (cmd *Root) do_http(account, method string, in, out interface{}, path strin
 	return err
 }
 
-func (cmd *Root) lookup_owner() string {
-	if cmd.Config != nil && cmd.Config.Owner != "" {
-		return cmd.Config.Owner
+func (app *App) lookup_owner() string {
+	if app.Owner != "" {
+		return app.Owner
 	}
 
-	return cmd.Account
+	return app.config.Env.CurrentUser.Email
 }
 
-func (cmd *Root) lookup_api_key(email string) (string, error) {
-	if email == cmd.Account {
-		return cmd.ApiKey, nil
+func (env *Env) lookup_api_key(email string) (string, error) {
+	if email == env.CurrentUser.Email {
+		return env.CurrentUser.ApiKey, nil
 	}
 
-	if cmd.Config != nil {
-		for _, owner := range cmd.Config.Owners {
-			if owner.Email == email {
-				return owner.ApiKey, nil
-			}
+	for _, owner := range env.OwnerPool {
+		if owner.Email == email {
+			return owner.ApiKey, nil
 		}
 	}
 

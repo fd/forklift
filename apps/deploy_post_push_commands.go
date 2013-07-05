@@ -1,4 +1,4 @@
-package deploy
+package apps
 
 import (
 	"bufio"
@@ -12,9 +12,9 @@ import (
 	"syscall"
 )
 
-func (cmd *Deploy) run_post_push_commands() error {
-	for _, command := range cmd.Config.PostPushCommands {
-		err := cmd.run_post_push_command(command)
+func (app *App) run_post_push_commands() error {
+	for _, command := range app.PostPushCommands {
+		err := app.run_post_push_command(command)
 		if err != nil {
 			return err
 		}
@@ -22,8 +22,8 @@ func (cmd *Deploy) run_post_push_commands() error {
 	return nil
 }
 
-func (cmd *Deploy) run_post_push_command(command string) error {
-	if cmd.DryRun {
+func (app *App) run_post_push_command(command string) error {
+	if app.config.DryRun {
 		fmt.Printf("Run: %s\n - skipped (dry run)\n", command)
 		return nil
 	}
@@ -44,7 +44,7 @@ func (cmd *Deploy) run_post_push_command(command string) error {
 		}
 	)
 
-	err := cmd.Http("POST", &req, &resp, "/apps/%s/dynos", cmd.Config.Name)
+	err := app.HttpV3("POST", &req, &resp, "/apps/%s/dynos", app.AppName)
 	if err != nil {
 		return err
 	}

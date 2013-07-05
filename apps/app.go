@@ -1,7 +1,8 @@
 package apps
 
 type App struct {
-	Target string
+	config    *Config
+	formation map[string]Formation
 
 	AppName          string            // name of the heroku app
 	Owner            string            // owner of the heroku app

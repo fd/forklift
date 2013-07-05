@@ -1,8 +1,9 @@
-package root
+package apps
 
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 	"time"
 )
@@ -13,23 +14,49 @@ type Formation struct {
 	Quantity uint8  `json:"quantity"`
 }
 
-func (cmd *Root) BreakFormation() error {
+func (app *App) FormationLoad() error {
+	var (
+		data      []Formation
+		formation map[string]Formation
+	)
+
+	err := app.HttpV3("GET", nil, &data, "/apps/%s/formation", app.AppName)
+	if err != nil {
+		return err
+	}
+
+	formation = make(map[string]Formation, len(data))
+	for _, typ := range data {
+		formation[typ.Type] = typ
+	}
+
+	app.formation = formation
+	return nil
+}
+
+func (app *App) FormationBreak() error {
+	var (
+		tabw = tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
+	)
+
 	fmt.Println("Break formation:")
-	tabw := tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
 
-	err := cmd.LoadConfig()
+	err := app.FormationLoad()
 	if err != nil {
 		return err
 	}
 
-	data := []Formation{}
-
-	err = cmd.Http("GET", nil, &data, "/apps/%s/formation", cmd.Config.Name)
-	if err != nil {
-		return err
+	// sort keys
+	keys := make([]string, 0, len(app.formation))
+	for key := range app.formation {
+		keys = append(keys, key)
 	}
+	sort.Strings(keys)
 
-	for _, formation := range data {
+	// scale formation
+	for _, key := range keys {
+		formation := app.formation[key]
+
 		if formation.Quantity == 0 {
 			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\n",
 				formation.Type, formation.Quantity, formation.Size)
@@ -38,7 +65,7 @@ func (cmd *Root) BreakFormation() error {
 
 		formation.Quantity = 0
 
-		err = cmd.Http("PATCH", &formation, nil, "/apps/%s/formation/%s", cmd.Config.Name, formation.Type)
+		err = app.HttpV3("PATCH", &formation, nil, "/apps/%s/formation/%s", app.AppName, formation.Type)
 		if err != nil {
 			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[31;40;4;5m(failed to pause)\x1b[0m\n   error: %s\n",
 				formation.Type, formation.Quantity, formation.Size, err)
@@ -50,24 +77,46 @@ func (cmd *Root) BreakFormation() error {
 
 	tabw.Flush()
 
-	cmd.Formation = data
-
-	if !cmd.DryRun {
-		err := cmd.wait_until_dynos_are_down()
-		if err != nil {
-			return err
-		}
+	if err = app.wait_until_dynos_are_down(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (cmd *Root) RestoreFormation() error {
-	fmt.Println("Restore formation:")
-	tabw := tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
-	count := 0
+func (app *App) FormationRestore() error {
+	var (
+		tabw  = tabwriter.NewWriter(os.Stdout, 8, 8, 1, ' ', 0)
+		count = 0
+	)
 
-	for _, formation := range cmd.Formation {
+	fmt.Println("Restore formation:")
+
+	prev_formation := app.formation
+	err := app.FormationLoad()
+	if err != nil {
+		return err
+	}
+	for key := range app.formation {
+		prev, ok := prev_formation[key]
+		if !ok {
+			continue
+		}
+
+		formation := app.formation[key]
+		formation.Quantity = prev.Quantity
+		app.formation[key] = formation
+	}
+
+	// sort keys
+	keys := make([]string, 0, len(app.formation))
+	for key := range app.formation {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		formation := app.formation[key]
 		count += int(formation.Quantity)
 
 		if formation.Quantity == 0 {
@@ -76,7 +125,7 @@ func (cmd *Root) RestoreFormation() error {
 			continue
 		}
 
-		err := cmd.Http("PATCH", &formation, nil, "/apps/%s/formation/%s", cmd.Config.Name, formation.Type)
+		err := app.HttpV3("PATCH", &formation, nil, "/apps/%s/formation/%s", app.AppName, formation.Type)
 		if err != nil {
 			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[31;40;4;5m(failed to restore)\x1b[0m\n   error: %s\n",
 				formation.Type, formation.Quantity, formation.Size, err)
@@ -88,21 +137,22 @@ func (cmd *Root) RestoreFormation() error {
 
 	tabw.Flush()
 
-	if !cmd.DryRun {
-		err := cmd.wait_until_dynos_are_up(count)
-		if err != nil {
-			return err
-		}
+	if err := app.wait_until_dynos_are_up(count); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (cmd *Root) wait_until_dynos_are_down() error {
+func (app *App) wait_until_dynos_are_down() error {
+	if app.config.DryRun {
+		return nil
+	}
+
 	deadline := time.Now().Add(5 * time.Minute)
 
 	for time.Now().Before(deadline) {
-		ok, err := cmd.are_all_dynos_down()
+		ok, err := app.are_all_dynos_down()
 
 		if err != nil {
 			time.Sleep(10 * time.Second)
@@ -119,11 +169,15 @@ func (cmd *Root) wait_until_dynos_are_down() error {
 	return fmt.Errorf("formation: unable to stop dynos")
 }
 
-func (cmd *Root) wait_until_dynos_are_up(count int) error {
+func (app *App) wait_until_dynos_are_up(count int) error {
+	if app.config.DryRun {
+		return nil
+	}
+
 	deadline := time.Now().Add(5 * time.Minute)
 
 	for time.Now().Before(deadline) {
-		ok, err := cmd.are_all_dynos_up(count)
+		ok, err := app.are_all_dynos_up(count)
 
 		if err != nil {
 			time.Sleep(10 * time.Second)
@@ -140,14 +194,14 @@ func (cmd *Root) wait_until_dynos_are_up(count int) error {
 	return fmt.Errorf("formation: unable to start dynos")
 }
 
-func (cmd *Root) are_all_dynos_down() (bool, error) {
+func (app *App) are_all_dynos_down() (bool, error) {
 	var (
 		data []struct {
 			State string `json:"state"`
 		}
 	)
 
-	err := cmd.Http("GET", nil, &data, "/apps/%s/dynos", cmd.Config.Name)
+	err := app.HttpV3("GET", nil, &data, "/apps/%s/dynos", app.AppName)
 	if err != nil {
 		return false, err
 	}
@@ -159,7 +213,7 @@ func (cmd *Root) are_all_dynos_down() (bool, error) {
 	return false, nil
 }
 
-func (cmd *Root) are_all_dynos_up(count int) (bool, error) {
+func (app *App) are_all_dynos_up(count int) (bool, error) {
 	var (
 		data []struct {
 			AttachUrl *string `json:"attach_url"`
@@ -167,7 +221,7 @@ func (cmd *Root) are_all_dynos_up(count int) (bool, error) {
 		}
 	)
 
-	err := cmd.Http("GET", nil, &data, "/apps/%s/dynos", cmd.Config.Name)
+	err := app.HttpV3("GET", nil, &data, "/apps/%s/dynos", app.AppName)
 	if err != nil {
 		return false, err
 	}

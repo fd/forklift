@@ -180,5 +180,5 @@ func (cmd *Root) are_all_dynos_up(count int) (bool, error) {
 		}
 	}
 
-	return (count == 0), nil
+	return count == 0, nil
 }

@@ -1,0 +1,7 @@
+box: wercker/golang
+
+build:
+  setps:
+    - script:
+        name: go get .
+        code: make build

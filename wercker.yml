@@ -1,8 +1,1 @@
 box: wercker/golang
-
-build:
-  steps:
-    - pjvds/setup-go-workspace
-    - script:
-        name: go get .
-        code: make build

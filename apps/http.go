@@ -6,7 +6,37 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/fd/go-util/errors"
 )
+
+func (app *App) HttpV2(method string, in, out interface{}, path string, args ...interface{}) error {
+	account := app.config.Env.CurrentUser.Email
+	return app.config.Env.HttpV2(account, method, in, out, path, args...)
+}
+
+func (app *App) OwnerHttpV2(method string, in, out interface{}, path string, args ...interface{}) error {
+	account := app.lookup_owner()
+	return app.config.Env.HttpV2(account, method, in, out, path, args...)
+}
+
+func (env *Env) HttpV2(account, method string, in, out interface{}, path string, args ...interface{}) error {
+	if !env.perform_request(method) {
+		return nil
+	}
+
+	req, err := env.new_request(account, method, in, path, args...)
+	if err != nil {
+		return err
+	}
+
+	err = env.do_request(req, account, in, out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (app *App) HttpV3(method string, in, out interface{}, path string, args ...interface{}) error {
 	account := app.config.Env.CurrentUser.Email
@@ -19,27 +49,54 @@ func (app *App) OwnerHttpV3(method string, in, out interface{}, path string, arg
 }
 
 func (env *Env) HttpV3(account, method string, in, out interface{}, path string, args ...interface{}) error {
-	if env.config.DryRun && (method != "GET" && method != "HEAD") {
+	if !env.perform_request(method) {
 		return nil
 	}
 
-	api_key, err := env.lookup_api_key(account)
+	req, err := env.new_request(account, method, in, path, args...)
 	if err != nil {
 		return err
 	}
 
+	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
+
+	err = env.do_request(req, account, in, out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *Env) perform_request(method string) bool {
+	if method == "GET" || method == "HEAD" {
+		return true
+	}
+	if env.config.DryRun {
+		return false
+	}
+	return true
+}
+
+func (env *Env) new_request(account, method string, in interface{}, path string, args ...interface{}) (*http.Request, error) {
+	api_key, err := env.lookup_api_key(account)
+	if e := errors.Annotate(err, "API error"); e != nil {
+		e.AddContext("account=%s", account)
+		return nil, e
+	}
+
 	var (
-		body_in  io.Reader
-		body_out bytes.Buffer
-		rawurl   string
+		body_in io.Reader
+		rawurl  string
 	)
 
 	if in != nil {
 		buf := bytes.NewBuffer(nil)
 
 		err := json.NewEncoder(buf).Encode(in)
-		if err != nil {
-			return err
+		if e := errors.Annotate(err, "API error"); e != nil {
+			e.AddContext("request.body=%+v", in)
+			return nil, e
 		}
 
 		body_in = bytes.NewReader(buf.Bytes())
@@ -48,38 +105,73 @@ func (env *Env) HttpV3(account, method string, in, out interface{}, path string,
 	rawurl = fmt.Sprintf("https://api.heroku.com"+path, args...)
 
 	req, err := http.NewRequest(method, rawurl, body_in)
-	if err != nil {
-		return err
+	if e := errors.Annotate(err, "API error"); e != nil {
+		e.AddContext("account=%s", account)
+		e.AddContext("url=%s", rawurl)
+		e.AddContext("method=%s", method)
+		e.AddContext("request.body=%+v", in)
+		return nil, e
 	}
 
 	req.SetBasicAuth(account, api_key)
-	req.Header.Set("Accept", "application/vnd.heroku+json; version=3")
 	req.Header.Set("User-Agent", "forklift; version=0")
 
+	return req, nil
+}
+
+func (env *Env) do_request(req *http.Request, account string, in, out interface{}) error {
+	var (
+		body_out bytes.Buffer
+	)
+
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
+	if e := errors.Annotate(err, "API error"); e != nil {
+		e.AddContext("account=%s", account)
+		e.AddContext("url=%s", req.URL.String())
+		e.AddContext("method=%s", req.Method)
+		e.AddContext("request.body=%+v", in)
+		return e
 	}
 
 	_, err = io.Copy(&body_out, resp.Body)
-	if err != nil {
-		resp.Body.Close()
-		return err
-	}
 	resp.Body.Close()
+	if e := errors.Annotate(err, "API error"); e != nil {
+		e.AddContext("account=%s", account)
+		e.AddContext("url=%s", req.URL.String())
+		e.AddContext("method=%s", req.Method)
+		e.AddContext("status=%d", resp.StatusCode)
+		e.AddContext("content_type=%d", resp.Header.Get("content-type"))
+		e.AddContext("request.body=%+v", in)
+		return e
+	}
 
 	if resp.StatusCode/100 != 2 {
-		err := &api_error{status: resp.StatusCode}
-		if e := json.Unmarshal(body_out.Bytes(), &err); e != nil {
-			return err
-		}
-		return err
+		err_resp := error_resp{}
+		json.Unmarshal(body_out.Bytes(), &err_resp)
+
+		e := errors.New("API error")
+		e.AddContext("account=%s", account)
+		e.AddContext("url=%s", req.URL.String())
+		e.AddContext("method=%s", req.Method)
+		e.AddContext("status=%d", resp.StatusCode)
+		e.AddContext("content_type=%d", resp.Header.Get("content-type"))
+		e.AddContext("request.body=%+v", in)
+		e.AddContext("error.id=%s", err_resp.Id)
+		e.AddContext("error.message=%s", err_resp.Message)
+		return e
 	}
 
 	if out != nil {
 		err := json.Unmarshal(body_out.Bytes(), out)
-		if err != nil {
-			return err
+		if e := errors.Annotate(err, "API error"); e != nil {
+			e.AddContext("account=%s", account)
+			e.AddContext("url=%s", req.URL.String())
+			e.AddContext("method=%s", req.Method)
+			e.AddContext("status=%d", resp.StatusCode)
+			e.AddContext("content_type=%d", resp.Header.Get("content-type"))
+			e.AddContext("request.body=%+v", in)
+			e.AddContext("response.body=%s", body_out.Bytes())
+			return e
 		}
 	}
 
@@ -108,12 +200,7 @@ func (env *Env) lookup_api_key(email string) (string, error) {
 	return "", fmt.Errorf("api: unknown heroku account %s", email)
 }
 
-type api_error struct {
-	status  int
+type error_resp struct {
 	Id      string `json:"id"`
 	Message string `json:"message"`
-}
-
-func (a *api_error) Error() string {
-	return fmt.Sprintf("api: %s: %s (%d)", a.Id, a.Message, a.status)
 }

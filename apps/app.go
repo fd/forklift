@@ -11,5 +11,6 @@ type App struct {
 	Collaborators    []string          // list of collaborators for the app
 	Domains          []string          // list of domains for the app
 	PostPushCommands []string          // list of commands to execute after pushing to heroku for the app
+	Features         []string          // list of features for the app
 	Environment      map[string]string // list of config variables for the app
 }

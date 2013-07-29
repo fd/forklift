@@ -119,6 +119,10 @@ func populate_app(root map[string]interface{}, app *App) {
 			app.Addons = must_string_slice("addons", v)
 			delete(root, key)
 
+		case "features", "Features":
+			app.Features = must_string_slice("features", v)
+			delete(root, key)
+
 		case "collaborators", "Collaborators":
 			app.Collaborators = must_string_slice("collaborators", v)
 			delete(root, key)
@@ -185,6 +189,10 @@ func pack_app(root map[string]interface{}, app *App) {
 
 	if len(app.Addons) > 0 {
 		root["addons"] = app.Addons
+	}
+
+	if len(app.Features) > 0 {
+		root["features"] = app.Features
 	}
 
 	if len(app.Collaborators) > 0 {

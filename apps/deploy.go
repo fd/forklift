@@ -18,6 +18,12 @@ func (app *App) Deploy() error {
 	}
 	fmt.Println("")
 
+	err = app.sync_features()
+	if err != nil {
+		return err
+	}
+	fmt.Println("")
+
 	err = app.sync_domains()
 	if err != nil {
 		return err

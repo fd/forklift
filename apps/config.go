@@ -42,6 +42,28 @@ func Load(wd, target string, dryrun, update_buildpacks bool) (*Config, error) {
 	cnf.DryRun = dryrun
 	cnf.UpdateDeploypacks = update_buildpacks
 
+	cnf, err = Expand(cnf)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cnf.Env.load_heroku_credentials()
+	if err != nil {
+		return nil, err
+	}
+
+	return cnf, nil
+}
+
+func Expand(cnf *Config) (*Config, error) {
+	var (
+		target            = cnf.Target
+		root_dir          = cnf.RootDir
+		dryrun            = cnf.DryRun
+		update_buildpacks = cnf.UpdateDeploypacks
+		err               error
+	)
+
 	for cnf.Deploypack != "" {
 		var (
 			in  bytes.Buffer
@@ -93,11 +115,6 @@ func Load(wd, target string, dryrun, update_buildpacks bool) (*Config, error) {
 		cnf.RootDir = root_dir
 		cnf.DryRun = dryrun
 		cnf.UpdateDeploypacks = update_buildpacks
-	}
-
-	err = cnf.Env.load_heroku_credentials()
-	if err != nil {
-		return nil, err
 	}
 
 	return cnf, nil

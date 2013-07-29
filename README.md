@@ -14,6 +14,7 @@ All forklift configuration happens in _target files_. Target files live in the `
 | `addons` | array of strings | A list of addons that must be provisioned. |
 | `collaborators` | array of strings | A list of collaborators that must have access to this app. |
 | `domains` | array of strings | A list of domains that must be added to this app. |
+| `features` | array of strings | A list of heroku labs features. |
 | `post_push_commands` | array of strings | A list of commands that must be run (on heroku using `heroku run ...`) after new code has been pushed. |
 | `environment` | map of strings | A map of configuration variables that must be added to the environment of the application. |
 | `deploypack` | string | The Deploypack to use when deploying this application. |

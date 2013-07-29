@@ -1,53 +1,49 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
-	"github.com/fd/forklift/deploypack/runner"
+	"github.com/fd/forklift/apps"
 )
 
 type Handler interface {
-	ProcessConfiguration(ctx *Context) error
+	ProcessConfiguration(cnf *apps.Config) (*apps.Config, error)
 }
 
 func Run(h Handler) {
-	ctx := &Context{
-		stdout: os.Stdout,
-	}
+	var (
+		stdout = os.Stdout
+		cnf    *apps.Config
+		err    error
+	)
 
 	os.Stdout = os.Stderr
 
-	err := h.ProcessConfiguration(ctx)
+	cnf, err = apps.DecodeJSON(os.Stdin)
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		os.Exit(1)
 		return
 	}
-}
 
-type Context struct {
-	stdout io.Writer
-}
+	cnf.Deploypack = ""
+	cnf.RootDir = os.Getenv("FORKLIFT_DIR")
+	cnf.Target = os.Getenv("FORKLIFT_TARGET")
+	cnf.DryRun = os.Getenv("FORKLIFT_DRYRUN") == "true"
+	cnf.UpdateDeploypacks = os.Getenv("FORKLIFT_UPDATE_DEPLOYPACKS") == "true"
 
-func (c *Context) LoadConfig(cnf interface{}) error {
-	return json.NewDecoder(os.Stdin).Decode(cnf)
-}
+	cnf, err = h.ProcessConfiguration(cnf)
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		os.Exit(1)
+		return
+	}
 
-func (c *Context) DumpConfig(cnf interface{}) error {
-	return json.NewEncoder(c.stdout).Encode(cnf)
-}
-
-func (c *Context) RunDeploypack(ref string, in, out interface{}) error {
-	return runner.Run(ref, in, out)
-}
-
-func (c *Context) Target() string {
-	return os.Getenv("FORKLIFT_TARGET")
-}
-
-func (c *Context) Dir() string {
-	return os.Getenv("FORKLIFT_DIR")
+	err = apps.EncodeJSON(stdout, cnf)
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		os.Exit(1)
+		return
+	}
 }

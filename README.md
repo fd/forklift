@@ -22,3 +22,4 @@ All forklift configuration happens in _target files_. Target files live in the `
 ## TODO
 
 - `pre push hooks`
+- `check`

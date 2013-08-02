@@ -58,7 +58,16 @@ func (app *App) push_repository() error {
 		if src == "" {
 			src = "origin/master"
 		}
-		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", src+":master", "--force")
+
+		cmd = exec.Command("git", "rev-parse", src+"^{commit}")
+		sha_data, err := cmd.Output()
+		if err != nil {
+			return err
+		}
+
+		sha := strings.TrimSpace(string(sha_data))
+
+		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", sha+":master", "--force")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = nil

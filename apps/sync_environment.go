@@ -17,15 +17,17 @@ type (
 )
 
 var ignored_keys = map[string]bool{
-	"DATABASE_URL":        true,
-	"GEM_PATH":            true,
+	"DATABASE_URL": true,
+	"GEM_PATH":     true,
+	"LANG":         true,
+	"PATH":         true,
+
 	"HEROKU_POSTGRESQL_*": true,
-	"LANG":                true,
 	"MEMCACHIER_*":        true,
-	"PATH":                true,
-	"PGBACKUPS_URL":       true,
-	"REDISCLOUD_URL":      true,
-	"REDISTOGO_URL":       true,
+	"PGBACKUPS_*":         true,
+	"REDISCLOUD_*":        true,
+	"REDISTOGO_*":         true,
+	"CLEARDB_*":           true,
 }
 
 func (app *App) sync_config() error {

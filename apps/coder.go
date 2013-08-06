@@ -242,6 +242,20 @@ func must_string_slice(key string, v interface{}) []string {
 }
 
 func must_string_map(key string, v interface{}) map[string]string {
+	if vlp, ok := v.(*toml.TomlTree); ok {
+		var (
+			vl   = *vlp
+			sl   = make(map[string]string, len(vl))
+			skey = key + "[k]"
+		)
+
+		for k, v := range vl {
+			sl[k] = must_string(skey, v)
+		}
+
+		return sl
+	}
+
 	if vl, ok := v.(map[string]interface{}); ok {
 		var (
 			sl   = make(map[string]string, len(vl))

@@ -28,6 +28,7 @@ var ignored_keys = map[string]bool{
 	"REDISCLOUD_*":        true,
 	"REDISTOGO_*":         true,
 	"CLEARDB_*":           true,
+	"NEW_RELIC_L*":        true,
 }
 
 func (app *App) sync_config() error {

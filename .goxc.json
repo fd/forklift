@@ -1,0 +1,31 @@
+{
+  "Tasks": [
+    "default",
+    "bintray"
+  ],
+	"TasksExclude": [
+		"go-vet"
+	],
+	"Os": "linux darwin",
+	"PackageVersion": "1.0.0",
+	"PrereleaseInfo": "alpha11",
+	"ConfigVersion": "0.9",
+  "TaskSettings": {
+    "bintray": {
+      "apihost": "https://api.bintray.com/",
+      "downloadshost": "https://dl.bintray.com/",
+      "downloadspage": "bintray.md",
+      "package": "forklift",
+      "repository": "deb",
+      "subject": "fd"
+    },
+    "pkg-build": {
+      "metadata": {
+        "maintainer": "Simon Menke"
+      },
+      "metadata-deb": {
+        "Depends": "groff"
+      }
+    }
+  }
+}

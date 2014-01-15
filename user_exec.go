@@ -2,13 +2,14 @@ package main
 
 import (
 	"os"
-	"os/user"
 	"path/filepath"
 	"syscall"
+
+	"github.com/fd/forklift/util/user"
 )
 
 func user_exec() {
-	home, err := get_home_dir()
+	home, err := user.Home()
 	if err != nil {
 		return
 	}
@@ -26,18 +27,4 @@ func user_exec() {
 
 	os.Args[0] = path
 	syscall.Exec(path, os.Args, os.Environ())
-}
-
-var home_dir string
-
-func get_home_dir() (string, error) {
-	if home_dir == "" {
-		u, err := user.Current()
-		if err != nil {
-			return "", err
-		}
-
-		home_dir = u.HomeDir
-	}
-	return home_dir, nil
 }

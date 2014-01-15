@@ -3,18 +3,19 @@ package helpers
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"os/user"
 	"path"
+
+	"github.com/fd/forklift/util/user"
 )
 
 func Path(ref string) (string, error) {
 	sha := sha1.New()
 	sha.Write([]byte(ref))
 
-	u, err := user.Current()
+	home, err := user.Home()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(u.HomeDir, ".forklift", "deploypacks", hex.EncodeToString(sha.Sum(nil))), nil
+	return path.Join(home, ".forklift", "deploypacks", hex.EncodeToString(sha.Sum(nil))), nil
 }

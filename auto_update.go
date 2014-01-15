@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fd/forklift/update"
+	"github.com/fd/forklift/util/user"
 	"github.com/fd/go-cli/cli"
 )
 
@@ -25,7 +26,7 @@ func auto_update() {
 }
 
 func do_update() bool {
-	home, err := get_home_dir()
+	home, err := user.Home()
 	if err != nil {
 		return false
 	}
@@ -55,7 +56,7 @@ func should_update() bool {
 		return true
 	}
 
-	home, err := get_home_dir()
+	home, err := user.Home()
 	if err != nil {
 		return false
 	}
@@ -83,7 +84,7 @@ func should_update() bool {
 }
 
 func mark_last_check() {
-	home, err := get_home_dir()
+	home, err := user.Home()
 	if err != nil {
 		return
 	}
@@ -100,7 +101,7 @@ func mark_last_check() {
 }
 
 func auto_update_interval() time.Duration {
-	home, err := get_home_dir()
+	home, err := user.Home()
 	if err != nil {
 		return default_auto_update_interval
 	}

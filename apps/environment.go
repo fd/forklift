@@ -2,10 +2,11 @@ package apps
 
 import (
 	"fmt"
-	"os/user"
 	"path"
 
 	"code.google.com/p/go-netrc/netrc"
+
+	"github.com/fd/forklift/util/user"
 )
 
 type Env struct {
@@ -16,12 +17,10 @@ type Env struct {
 }
 
 func (env *Env) load_heroku_credentials() error {
-	u, err := user.Current()
+	home, err := user.Home()
 	if err != nil {
 		return err
 	}
-
-	home := u.HomeDir
 
 	machines, _, err := netrc.ParseFile(path.Join(home, ".netrc"))
 	if err != nil {

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	"github.com/kr/hk/term"
+	"github.com/heroku/hk/term"
 	"io"
 	"net/url"
 	"os"
@@ -46,10 +46,17 @@ func (app *App) run_post_push_command(command string) error {
 
 	err := app.HttpV3("POST", &req, &resp, "/apps/%s/dynos", app.AppName)
 	if err != nil {
+		fmt.Printf("error=%s", err)
 		return err
 	}
 
-	return do_rendervous(resp.AttachURL)
+	err = do_rendervous(resp.AttachURL)
+	if err != nil {
+		fmt.Printf("error=%s", err)
+		return err
+	}
+
+	return nil
 }
 
 func do_rendervous(rendezvous_url string) error {

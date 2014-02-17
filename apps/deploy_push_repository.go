@@ -20,7 +20,7 @@ func (app *App) push_repository() error {
 
 	cmd = exec.Command("git", "remote", "update", "origin")
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stdout
 	cmd.Stdin = nil
 	err = cmd.Run()
 	if err != nil {
@@ -69,7 +69,7 @@ func (app *App) push_repository() error {
 
 		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", sha+":master", "--force")
 		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stderr = os.Stdout
 		cmd.Stdin = nil
 		err = cmd.Run()
 		if err != nil {
@@ -101,7 +101,7 @@ func (app *App) tag_repository() error {
 	} else {
 		cmd = exec.Command("git", "tag", "-a", tag, "-m", msg, "origin/master")
 		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stderr = os.Stdout
 		cmd.Stdin = nil
 		err = cmd.Run()
 		if err != nil {
@@ -117,7 +117,7 @@ func (app *App) tag_repository() error {
 	} else {
 		cmd = exec.Command("git", "push", "origin", tag)
 		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stderr = os.Stdout
 		cmd.Stdin = nil
 		err = cmd.Run()
 		if err != nil {

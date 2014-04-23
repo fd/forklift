@@ -123,6 +123,9 @@ func do_rendervous(rendezvous_url string) error {
 	if err = <-errc; err != nil {
 		return err
 	}
+	if err = <-errc; err != nil {
+		return err
+	}
 
 	return nil
 }

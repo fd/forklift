@@ -29,11 +29,16 @@ func (app *App) run_post_push_command(command string) error {
 
 	var (
 		req = struct {
-			Command string `json:"command"`
-			Attach  bool   `json:"attach"`
+			Command string            `json:"command"`
+			Attach  bool              `json:"attach"`
+			Env     map[string]string `json:"env"`
 		}{
 			Command: command,
 			Attach:  true,
+			Env: map[string]string{
+				"COLUMNS": "128",
+				"ROWS":    "50",
+			},
 		}
 
 		resp struct {
@@ -85,7 +90,8 @@ func do_rendervous(rendezvous_url string) error {
 		}
 	}
 
-	if _, err := io.Copy(os.Stdout, br); err != nil {
+	_, err = io.Copy(os.Stdout, br)
+	if err != nil {
 		return err
 	}
 

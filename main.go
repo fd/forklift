@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/fd/go-cli/cli"
+	"gopkg.cc/fd/go-cli/v1/cli"
 )
 
 import (

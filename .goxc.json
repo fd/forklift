@@ -8,7 +8,7 @@
 	],
 	"Os": "linux darwin",
 	"PackageVersion": "1.0.0",
-	"PrereleaseInfo": "alpha15",
+	"PrereleaseInfo": "alpha16",
 	"ConfigVersion": "0.9",
   "TaskSettings": {
     "bintray": {

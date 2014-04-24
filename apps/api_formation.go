@@ -10,7 +10,7 @@ import (
 
 type Formation struct {
 	Type     string `json:"type"`
-	Size     uint8  `json:"size"`
+	Size     string `json:"size"`
 	Quantity uint8  `json:"quantity"`
 }
 
@@ -58,7 +58,7 @@ func (app *App) FormationBreak() error {
 		formation := app.formation[key]
 
 		if formation.Quantity == 0 {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\n",
 				formation.Type, formation.Quantity, formation.Size)
 			continue
 		}
@@ -67,10 +67,10 @@ func (app *App) FormationBreak() error {
 
 		err = app.HttpV3("PATCH", &formation, nil, "/apps/%s/formation/%s", app.AppName, formation.Type)
 		if err != nil {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[31;40;4;5m(failed to pause)\x1b[0m\n   error: %s\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\t\x1b[31;40;4;5m(failed to pause)\x1b[0m\n   error: %s\n",
 				formation.Type, formation.Quantity, formation.Size, err)
 		} else {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[32m(paused)\x1b[0m\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\t\x1b[32m(paused)\x1b[0m\n",
 				formation.Type, formation.Quantity, formation.Size)
 		}
 	}
@@ -120,17 +120,17 @@ func (app *App) FormationRestore() error {
 		count += int(formation.Quantity)
 
 		if formation.Quantity == 0 {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\n",
 				formation.Type, formation.Quantity, formation.Size)
 			continue
 		}
 
 		err := app.HttpV3("PATCH", &formation, nil, "/apps/%s/formation/%s", app.AppName, formation.Type)
 		if err != nil {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[31;40;4;5m(failed to restore)\x1b[0m\n   error: %s\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\t\x1b[31;40;4;5m(failed to restore)\x1b[0m\n   error: %s\n",
 				formation.Type, formation.Quantity, formation.Size, err)
 		} else {
-			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%d\t\x1b[32m(restored)\x1b[0m\n",
+			fmt.Fprintf(tabw, " - %s\tquantity=%d\tsize=%s\t\x1b[32m(restored)\x1b[0m\n",
 				formation.Type, formation.Quantity, formation.Size)
 		}
 	}

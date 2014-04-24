@@ -91,6 +91,10 @@ func (set *addon_set) CurrentKeys() []string {
 }
 
 func (set *addon_set) ShouldChange(key string) bool {
+	if set.current[key].name == "heroku-postgresql" {
+		return false
+	}
+
 	return set.requested[key].Plan.name != set.current[key].Plan.name
 }
 

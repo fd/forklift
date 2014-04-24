@@ -4,12 +4,9 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	"github.com/heroku/hk/term"
 	"io"
 	"net/url"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 func (app *App) run_post_push_commands() error {
@@ -88,42 +85,7 @@ func do_rendervous(rendezvous_url string) error {
 		}
 	}
 
-	if term.IsTerminal(os.Stdin) && term.IsTerminal(os.Stdout) {
-		err = term.MakeRaw(os.Stdin)
-		if err != nil {
-			return err
-		}
-		defer term.Restore(os.Stdin)
-
-		sig := make(chan os.Signal)
-		signal.Notify(sig, os.Signal(syscall.SIGQUIT), os.Interrupt)
-		go func() {
-			defer term.Restore(os.Stdin)
-			for sg := range sig {
-				switch sg {
-				case os.Interrupt:
-					cn.Write([]byte{3})
-				case os.Signal(syscall.SIGQUIT):
-					cn.Write([]byte{28})
-				default:
-					panic("not reached")
-				}
-			}
-		}()
-	}
-
-	errc := make(chan error)
-	cp := func(a io.Writer, b io.Reader) {
-		_, err := io.Copy(a, b)
-		errc <- err
-	}
-
-	go cp(os.Stdout, br)
-	go cp(cn, os.Stdin)
-	if err = <-errc; err != nil {
-		return err
-	}
-	if err = <-errc; err != nil {
+	if _, err := io.Copy(os.Stdout, br); err != nil {
 		return err
 	}
 

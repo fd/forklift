@@ -2,7 +2,7 @@ package deploy
 
 import (
 	"github.com/fd/forklift/root"
-	"gopkg.cc/fd/go-cli/v1/cli"
+	"github.com/fd/forklift/static/gopkg.in/fd/go-cli.v1/cli"
 )
 
 func init() {

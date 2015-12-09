@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	toml "github.com/pelletier/go-toml"
+	toml "github.com/fd/forklift/static/github.com/pelletier/go-toml"
 )
 
 func DecodeJSON(r io.Reader) (*Config, error) {

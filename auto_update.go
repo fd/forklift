@@ -10,7 +10,7 @@ import (
 
 	"github.com/fd/forklift/update"
 	"github.com/fd/forklift/util/user"
-	"gopkg.cc/fd/go-cli/v1/cli"
+	"github.com/fd/forklift/static/gopkg.in/fd/go-cli.v1/cli"
 )
 
 const default_auto_update_interval = 24 * time.Hour

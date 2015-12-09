@@ -1,0 +1,57 @@
+error: bar err
+  context:
+    a = 42
+    c = 7
+  location:
+    github.com/fd/forklift/static/github.com/fd/go-util/errors/github.com/fd/forklift/static/github.com/fd/go-util/errors/error_test.go:16 errors.TestAnnotateNested() (0x35722)
+      13   err1 := New("%s err", "foo")
+      14   err1.AddContext("hello=%s", "world")
+      15 
+    > 16   err2 := Annotate(err1, "%s err", "bar")
+      17   err2.AddContext("c=%d", 7)
+      18   err2.AddContext("a=%d", 42)
+      19 
+    testing/testing/testing.go:353 testing.tRunner() (0x2de6a)
+      350         t.signal <- t
+      351     }()
+      352 
+    > 353     test.F(t)
+      354 }
+      355 
+      356 // An internal function but exported because it is cross-package; part of the implementation
+    runtime/runtime/proc.c:1223 runtime.goexit() (0x17410)
+      1220 
+      1221 // Finishes execution of the current goroutine.
+      1222 void
+    > 1223 runtime·goexit(void)
+      1224 {
+      1225     if(raceenabled)
+      1226         runtime·racegoend();
+  error: foo err
+    context:
+      hello = world
+    location:
+      github.com/fd/forklift/static/github.com/fd/go-util/errors/github.com/fd/forklift/static/github.com/fd/go-util/errors/error_test.go:13 errors.TestAnnotateNested() (0x3556b)
+        10 )
+        11 
+        12 func TestAnnotateNested(t *testing.T) {
+      > 13   err1 := New("%s err", "foo")
+        14   err1.AddContext("hello=%s", "world")
+        15 
+        16   err2 := Annotate(err1, "%s err", "bar")
+      testing/testing/testing.go:353 testing.tRunner() (0x2de6a)
+        350         t.signal <- t
+        351     }()
+        352 
+      > 353     test.F(t)
+        354 }
+        355 
+        356 // An internal function but exported because it is cross-package; part of the implementation
+      runtime/runtime/proc.c:1223 runtime.goexit() (0x17410)
+        1220 
+        1221 // Finishes execution of the current goroutine.
+        1222 void
+      > 1223 runtime·goexit(void)
+        1224 {
+        1225     if(raceenabled)
+        1226         runtime·racegoend();

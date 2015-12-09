@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/fd/forklift/root"
-	"gopkg.cc/fd/go-cli/v1/cli"
+	"github.com/fd/forklift/static/gopkg.in/fd/go-cli.v1/cli"
 )
 
 func init() {
@@ -119,7 +119,7 @@ func get_latest_release(prerelease bool) (*release_t, error) {
 		latest   *release_t
 	)
 
-	resp, err := http.Get("https://api.github.com/repos/fd/forklift/releases")
+	resp, err := http.Get("https://api.github.com/fd/forklift/static/github.com/repos/fd/forklift/releases")
 	if err != nil {
 		return nil, err
 	}

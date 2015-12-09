@@ -4,7 +4,7 @@ More managable application deployment for heroku.
 
 ## Configuration
 
-All forklift configuration happens in _target files_. Target files live in the `.forklift` directory at the root of your project. Target files use the [TOML](https://github.com/mojombo/toml) format.
+All forklift configuration happens in _target files_. Target files live in the `.forklift` directory at the root of your project. Target files use the [TOML](https://github.com/fd/forklift/static/github.com/mojombo/toml) format.
 
 | Key | Type | Description |
 | --- | ---- | ----------- |

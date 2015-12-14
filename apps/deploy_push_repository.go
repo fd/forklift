@@ -67,7 +67,7 @@ func (app *App) push_repository() error {
 
 		sha := strings.TrimSpace(string(sha_data))
 
-		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", sha+":master", "--force")
+		cmd = exec.Command("git", "push", "git@heroku.com:"+app.AppName+".git", sha+":refs/heads/master", "--force")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stdout
 		cmd.Stdin = nil

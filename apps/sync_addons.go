@@ -39,6 +39,11 @@ func (app *App) sync_addons() error {
 			name: parts[0],
 			Plan: plan_t{Name: name, name: parts[1]},
 		}
+
+		if addon.name == "pgbackups" {
+			continue
+		}
+
 		set.requested[addon.name] = addon
 	}
 
